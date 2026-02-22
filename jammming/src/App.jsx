@@ -1,10 +1,18 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import reactLogo from './assets/react.svg';
+import viteLogo from '/vite.svg';
+import './App.css';
+import Playlists from '../components/Playlists/Playlists';
+import SearchBar from '../components/SearchBar/SearchBar';
+import SearchResults from '../components/SearchResults/SearchResults';
+import Spotify from '../util/Spotify';
+
 
 function App() {
   const [count, setCount] = useState(0)
+  const [searchResults, setSearchResults] = useState([]);
+  const [playlistName, setPlaylistName] = useState('New Playlist');
+  const [playlistTracks, setPlaylistTracks] = useState([]);
 
   return (
     <>
