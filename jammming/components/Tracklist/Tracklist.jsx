@@ -12,7 +12,7 @@ const Tracklist = (props) => {
                     <Track
                         track={track}
                         id={track.id}
-                        onRemoval={}
+                        onRemoval={props.onRemoval}
                     />
                 );
             })}

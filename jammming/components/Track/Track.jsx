@@ -1,9 +1,6 @@
 import React, { useCallback } from 'react';
-import { useState, useEffect } from 'react-dom';
-import Tracklist from '../Tracklist/Tracklist';
 
 const Track = (props) => {
-    const [track, setTrack] = useState('');
 
     const addTrack = useCallback((event) => {
         props.onAdd(props.track);
@@ -13,12 +10,29 @@ const Track = (props) => {
         props.onRemoval(props.track);
     }, [props.onRemoval, props.track]);
 
+    const renderAction = () => {
+        if(props.onRemoval) {
+            return (
+                <button className='trackAction' onClick={removeTrack}>
+                    -
+                </button>
+            );
+        } 
+
+        return (
+            <button className='trackAction' onClick={addTrack}>
+                +
+            </button>
+        );
+    };
+
     return(
-        <div>
-            <div>
+        <div className='track'>
+            <div className='trackInfo'>
                 <h3>{props.track.title}</h3>
                 <p>{props.track.artist} | {props.track.album}</p>
             </div>
+            {renderAction()}
         </div>
     );
 };
