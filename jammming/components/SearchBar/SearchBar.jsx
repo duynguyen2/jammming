@@ -1,5 +1,4 @@
-import React, { useCallback } from 'react';
-import { useState } from 'react-dom';
+import React, { useState, useCallback } from 'react';
 
 const SearchBar = (props) => {
     const [searchItem, setSearchItem] = useState('');
