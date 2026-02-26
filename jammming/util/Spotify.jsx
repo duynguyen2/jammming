@@ -1,5 +1,6 @@
-const clientID = import.meta.env.REACT_APP_SPOTIFY_API_KEY;
-const redirectURI = 'http://127.0.0.1:5173';
+const clientID = 'ADD CLIENT ID';
+const redirectURI = 'http://127.0.0.1:8888/callback';
+
 let accessToken;
 
 const Spotify = {
@@ -12,7 +13,7 @@ const Spotify = {
         const expiresInMatch = window.location.href.match(/access_token=([^&*])/);
         if(accessTokenMatch && expiresInMatch) {
             accessToken = accessTokenMatch[1];
-            const expiresIn = expiresInMatch[1];
+            const expiresIn = Number(expiresInMatch[1]);
             window.setTimeout(() => accessToken = '', expiresIn * 1000);
             window.history.pushState('Access token', null, '/'); //clears parameter and grabs new access token when it expires
             return accessToken;
@@ -24,7 +25,7 @@ const Spotify = {
 
     search(searchItem) {
         const accessToken = Spotify.getAccessToken();
-        return fetch(`https://api.spotify.com/v1/search?q=${searchItem}&type=track`, {
+        return fetch(`https://api.spotify.com/v1/search?type=track&q=${searchItem}`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`
             }
@@ -38,7 +39,7 @@ const Spotify = {
                 id: track.id,
                 name: track.name,
                 artist: track.artist[0].name,
-                album: track.album[0].name,
+                album: track.album.name,
                 uri: track.uri
             }))
         });
@@ -62,7 +63,7 @@ const Spotify = {
                 method: 'POST',
                 body: JSON.stringify({name: name})
             })
-        }).then(response => response.json)
+        }).then(response => response.json())
         .then(jsonResponse => {
             const playlistID = jsonResponse.id;
             return fetch(`https://api.spotify.com/v1/users/${userID}/playlists/${playlistID}/tracks`, {
@@ -72,7 +73,6 @@ const Spotify = {
             });
         });
     }
-
 };
 
 export default Spotify;
