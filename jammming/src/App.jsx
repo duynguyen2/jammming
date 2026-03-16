@@ -15,7 +15,9 @@ function App() {
   const [playlistTracks, setPlaylistTracks] = useState([]);
 
   const search = useCallback(item => {
-    Spotify.search(item).then(setSearchResults);
+    Spotify.search(item).then(searchResults => {
+      setSearchResults(searchResults);
+    });
   }, []);
 
   const addTrack = useCallback(track => {
@@ -27,7 +29,7 @@ function App() {
 
   const removeTrack = useCallback(track => {
     setPlaylistTracks(prevTracks =>
-      prevTracks.filter(currentTrack => currentTrack.id === track.id)
+      prevTracks.filter(currentTrack => currentTrack.id !== track.id)
     );
   }, []);
 
