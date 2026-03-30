@@ -1,68 +1,77 @@
-import { useState, useCallback } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
-import Playlists from '../components/Playlists/Playlists';
+import Playlist from '../components/Playlists/Playlists';
 import SearchBar from '../components/SearchBar/SearchBar';
 import SearchResults from '../components/SearchResults/SearchResults';
 import Spotify from '../util/Spotify';
 
 
 function App() {
-  const [count, setCount] = useState(0)
   const [searchResults, setSearchResults] = useState([]);
   const [playlistName, setPlaylistName] = useState('New Playlist');
   const [playlistTracks, setPlaylistTracks] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const search = useCallback(item => {
-    Spotify.search(item).then(searchResults => {
-      setSearchResults(searchResults);
-    });
-  }, []);
+  /*
+  useEffect(() => {
+      const timeout = setTimeout(() => {
+        if (term) search(term);
+      }, 500);
 
-  const addTrack = useCallback(track => {
-    if(playlistTracks.some(savedTrack => savedTrack.id === track.id))
-      return;
+      return () => clearTimeout(timeout);
+  }, [term]);
+  */
 
-    setPlaylistTracks(prevTracks => [...prevTracks, track])
-  }, [playlistTracks]);
+  // search logic
+  const search = async (term) => {
+    const results = await Spotify.search(term);
+    setSearchResults(results);
+  };
 
-  const removeTrack = useCallback(track => {
-    setPlaylistTracks(prevTracks =>
-      prevTracks.filter(currentTrack => currentTrack.id !== track.id)
+  // adding track logic
+  const addTrack = (track) => {
+    if (playlistTracks.find(t => t.id === track.id)) return;
+    setPlaylistTracks([...playlistTracks, track]);
+  };
+
+  // remove track logic
+  const removeTrack = (track) => {
+    setPlaylistTracks(
+      playlistTracks.filter(t => t.id !== track.id)
     );
-  }, []);
+  };
 
-  const updatePlaylistName = useCallback(name => {
+  const updatePlaylistName = (name) => {
     setPlaylistName(name);
-  }, []);
+  };
 
-  const savePlaylist = useCallback(() => {
-    const trackURIs = playlistTracks.map(track => track.uri);
-    Spotify.savePlaylist(playlistName, trackURIs).then(() => {
-      setPlaylistName('New Playlist');
-      setPlaylistTracks([]);
-    });
-  }, [playlistName, playlistTracks]);
+  const savePlaylist = async() => {
+    const uris = playlistTracks.map(track => track.uri);
+    await Spotify.savePlaylist(playlistName, uris);
+
+    setPlaylistName('New Playlist');
+    setPlaylistTracks([]);
+  };
 
   return (
     <div>
-      <h1>Jammming</h1>
-      <div className='App'>
-        <SearchBar onSearch={search} />
-        <div className='App-Playlist'>
-          <SearchResults SearchResults={searchResults} onAdd={addTrack} />
-          <Playlists
-            playlistName={playlistName}
-            playlistTracks={playlistTracks}
-            onNameChange={updatePlaylistName}
-            onRemove={removeTrack}
-            onSave={savePlaylist}
-          />
-        </div>
+      <h1>Ja<span>mmm</span>ing</h1>
+      <SearchBar onSearch={search} />
+      <div className="App-playlist">
+        <SearchResults
+          tracks={searchResults}
+          onAdd={addTrack}
+        />
+        <Playlist
+          name={playlistName}
+          tracks={playlistTracks}
+          onRemove={removeTrack}
+          onNameChange={updatePlaylistName}
+          onSave={savePlaylist}
+        />
       </div>
     </div>
   )
 }
 
-export default App
+export default App;
