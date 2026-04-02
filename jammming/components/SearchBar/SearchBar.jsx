@@ -1,32 +1,28 @@
 import React, { useState, useCallback } from 'react';
 import './SearchBar.css';
 
-const SearchBar = (props) => {
+const SearchBar = ({ onSearch }) => {
     const [searchItem, setSearchItem] = useState('');
 
-    const handleItemChange = useCallback((event) => {
-        setSearchItem(event.target.value);
-    }, []);
-
-    const handleSearch = useCallback(() => {
-        props.onSearch(searchItem);
-    }, [props.onSearch, searchItem]);
-
-    const handleKeyDown = (event) => {
-        if(event.key === 'Enter') {
-            search();
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            onSearch(searchItem);
         }
+    };
+
+    const handleSearchClick = () => {
+        onSearch(searchItem);
     };
 
     return (
         <div>
-            <h3>Search:</h3>
             <input
-                placeholder='Enter Song, Album, or Artist...'
-                onChange={handleItemChange}
+                value={searchItem}
+                onChange={(e) => setSearchItem(e.target.value)}
                 onKeyDown={handleKeyDown}
+                placeholder="Enter A Song, Album, or Artist"
             />
-            <button className='searchButton' onClick={handleSearch}>SEARCH</button>
+            <button onClick={handleSearchClick}>SEARCH</button>
         </div>
     );
 };
