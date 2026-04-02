@@ -25,6 +25,7 @@ function App() {
   // search logic
   const search = async (term) => {
     const results = await Spotify.search(term);
+    console.log('SEARCH RESULTS:', results);
     setSearchResults(results);
   };
 
@@ -59,7 +60,7 @@ function App() {
       <SearchBar onSearch={search} />
       <div className="App-playlist">
         <SearchResults
-          tracks={searchResults}
+          searchResults={searchResults}
           onAdd={addTrack}
         />
         <Playlist

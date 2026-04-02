@@ -1,17 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './SearchResults.css';
 import Tracklist from '../Tracklist/Tracklist';
 
-const SearchResults = (props) => {
+const SearchResults = ({ searchResults, onAdd }) => {
+    const [term, setTerm] = useState('');
 
     return(
-        <div className='searhResults'>
-            <h2>Results:</h2>
-            <Tracklist
-                tracklist={props.SearchResults}
-                onAdd={props.onAdd}
-                isRemoval={false}
+        <div>
+            <input
+                value={term}
+                onChange={(e) => setTerm(e.target.value)}
             />
+                    <Tracklist
+                        tracks={searchResults}
+                        onAdd={onAdd}
+                        isRemoval={false}
+                    />
+            <button onClick={() => onSearch(term)}>SEARCH</button>
         </div>
     );
 };
