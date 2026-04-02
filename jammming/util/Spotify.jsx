@@ -42,10 +42,10 @@ const Spotify = {
         const verifier = localStorage.getItem('code_verifier');
 
         const body = new URLSearchParams({
-        client_id: clientId,
+        client_id: clientID,
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: redirectUri,
+        redirect_uri: redirectURI,
         code_verifier: verifier
         });
 
@@ -83,8 +83,7 @@ const Spotify = {
             artist: track.artists[0].name,
             album: track.album.name,
             uri: track.uri
-            })
-        );
+        }));
     },
 
     async savePlaylist(name, trackURIs) {
