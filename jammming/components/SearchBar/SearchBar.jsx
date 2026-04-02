@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import './SearchBar.css';
 
 const SearchBar = (props) => {
     const [searchItem, setSearchItem] = useState('');
@@ -11,17 +12,21 @@ const SearchBar = (props) => {
         props.onSearch(searchItem);
     }, [props.onSearch, searchItem]);
 
+    const handleKeyDown = (event) => {
+        if(event.key === 'Enter') {
+            search();
+        }
+    };
+
     return (
         <div>
             <h3>Search:</h3>
             <input
-                type='text'
-                placeholder='Enter Song Name...'
-                value={searchItem}
+                placeholder='Enter Song, Album, or Artist...'
                 onChange={handleItemChange}
-                className='searchInput'
+                onKeyDown={handleKeyDown}
             />
-            <button onClick={handleSearch}>SEARCH</button>
+            <button className='searchButton' onClick={handleSearch}>SEARCH</button>
         </div>
     );
 };

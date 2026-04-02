@@ -1,15 +1,18 @@
 import { useCallback } from 'react';
 import Tracklist from '../Tracklist/Tracklist';
 
-const Playlists = (props) => {
+const Playlist = (props) => {
 
     const handleNameChange = useCallback(event => {
         props.onNameChange(event.target.value);
     }, [props.onNameChange]);
 
     return (
-        <div>
-            <input onNameChange={handleNameChange} defaultValue={'New Playlist'} />
+        <div className='playlist'>
+            <input
+                onNameChange={handleNameChange}
+                defaultValue={'New Playlist'}
+            />
             <Tracklist
                 tracklist={props.playlistTracks}
                 isRemoval={true}
@@ -20,4 +23,4 @@ const Playlists = (props) => {
     );
 };
 
-export default Playlists;
+export default Playlist;
