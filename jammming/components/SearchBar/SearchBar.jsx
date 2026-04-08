@@ -1,24 +1,30 @@
-import React, { useState, useCallback } from 'react';
+import { useState } from 'react';
 import './SearchBar.css';
 
 const SearchBar = ({ onSearch }) => {
     const [searchItem, setSearchItem] = useState('');
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && searchItem.trim()) {
             onSearch(searchItem);
         }
     };
 
     const handleSearchClick = () => {
-        onSearch(searchItem);
+        if(searchItem.trim()) {
+            onSearch(searchItem.trim());
+        }
     };
+
+    const handleChange = (e) => {
+        setSearchItem(e.target.value);
+    }
 
     return (
         <div>
             <input
                 value={searchItem}
-                onChange={(e) => setSearchItem(e.target.value)}
+                onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Enter A Song, Album, or Artist"
             />

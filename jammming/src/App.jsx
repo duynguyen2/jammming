@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import Playlist from '../components/Playlists/Playlists';
 import SearchBar from '../components/SearchBar/SearchBar';
@@ -12,33 +12,53 @@ function App() {
   const [playlistTracks, setPlaylistTracks] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  /*
-  useEffect(() => {
-      const timeout = setTimeout(() => {
-        if (term) search(term);
-      }, 500);
+  const testToken = async() => {
+    const token = await Spotify.getAccessToken();
 
-      return () => clearTimeout(timeout);
-  }, [term]);
-  */
+    const res = await fetch('https://api.spotify.com/v1/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    console.log('USER DATA:', data);
+  };
+
+  useEffect(() => {
+    testToken();
+  }, []);
 
   // search logic
   const search = async (term) => {
-    const results = await Spotify.search(term);
-    console.log('SEARCH RESULTS:', results);
-    setSearchResults(results);
+    if(!term) return;
+
+    setLoading(true);
+
+    try {
+      const results = await Spotify.search(term);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Search failed:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // adding track logic
   const addTrack = (track) => {
-    if (playlistTracks.find(t => t.id === track.id)) return;
-    setPlaylistTracks([...playlistTracks, track]);
+    setPlaylistTracks(prevTracks => {
+        if (playlistTracks.find(t => t.id === track.id)) return prevTracks;
+        return[...prevTracks, track];
+      }
+    )
   };
 
   // remove track logic
   const removeTrack = (track) => {
-    setPlaylistTracks(
-      playlistTracks.filter(t => t.id !== track.id)
+    setPlaylistTracks(prevTracks =>
+      prevTracks.filter(t => t.id !== track.id)
     );
   };
 
@@ -47,11 +67,21 @@ function App() {
   };
 
   const savePlaylist = async() => {
-    const uris = playlistTracks.map(track => track.uri);
-    await Spotify.savePlaylist(playlistName, uris);
+    if(!playlistName || playlistTracks.length === 0) return;
+    setLoading(true);
 
-    setPlaylistName('New Playlist');
-    setPlaylistTracks([]);
+    try {
+      const uris = playlistTracks.map(track => track.uri);
+      console.log('Track URIs:', uris);
+      await Spotify.savePlaylist(playlistName, uris);
+
+      setPlaylistName('New Playlist');
+      setPlaylistTracks([]);
+    } catch(e) {
+      console.error('Failed to save playlist:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,6 +100,7 @@ function App() {
           onNameChange={updatePlaylistName}
           onSave={savePlaylist}
         />
+        {loading && <p>Loading...</p>}
       </div>
     </div>
   )
