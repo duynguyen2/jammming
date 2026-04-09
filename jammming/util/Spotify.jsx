@@ -47,6 +47,13 @@ const Spotify = {
     if (code) {
       const codeVerifier = localStorage.getItem('code_verifier');
 
+      if(!codeVerifier) {
+        console.error('Missing code_verifier - restarting auth');
+        localStorage.clear();
+        window.location.href='/';
+        return;
+      }
+
       const body = new URLSearchParams({
         client_id: clientId,
         grant_type: 'authorization_code',
@@ -88,12 +95,18 @@ const Spotify = {
     console.log('CODE:', code);
     console.log('CODE VERIFIER:', codeVerifier);
 
+    const scopes = [
+      'playlist-modify-public',
+      'playlist-modify-private',
+      'user-read-email'
+    ];
+
     const authUrl =
       `https://accounts.spotify.com/authorize` +
       `?client_id=${clientId}` +
       `&response_type=code` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&scope=playlist-modify-public playlist-modify-private user-read-email` +
+      `&scope=${scopes.join(' ')}` +
       `&code_challenge_method=S256` +
       `&code_challenge=${codeChallenge}`;
 
@@ -141,12 +154,14 @@ const Spotify = {
 
     try {
       const token = await this.getAccessToken();
+      console.log('TOKEN USED FOR SAVE:', token);
       const headers = { Authorization: `Bearer ${token}` };
 
       // Get user ID
       const userResponse = await fetch('https://api.spotify.com/v1/me', { headers });
       const userData = await userResponse.json();
       const userId = userData.id;
+
 
       // Create playlist
       const createResponse = await fetch(
@@ -160,7 +175,7 @@ const Spotify = {
           body: JSON.stringify({ 
             name,
             description: 'Created with Jammming',
-            public: true
+            public: false,
           })
         }
       );
@@ -187,9 +202,12 @@ const Spotify = {
         }
       );
 
+      console.log('USER ID:', userId);
+      console.log('PLAYLIST OWNER:', playlistData.owner?.id);
+
       if(!addResponse.ok) {
         const err = await addResponse.json();
-        console.error('ADD TRACKS ERROR FULL:', err);
+        console.error('ADD TRACKS ERROR FULL:', JSON.stringify(err, null, 2));
         throw new Error(err.error?.message || 'Failed to add tracks');
       }
 

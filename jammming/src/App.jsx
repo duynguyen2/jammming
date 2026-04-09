@@ -27,7 +27,7 @@ function App() {
   };
 
   useEffect(() => {
-    testToken();
+    //testToken();
   }, []);
 
   // search logic
@@ -49,7 +49,7 @@ function App() {
   // adding track logic
   const addTrack = (track) => {
     setPlaylistTracks(prevTracks => {
-        if (playlistTracks.find(t => t.id === track.id)) return prevTracks;
+        if (prevTracks.find(t => t.id === track.id)) return prevTracks;
         return[...prevTracks, track];
       }
     )
@@ -78,7 +78,7 @@ function App() {
       setPlaylistName('New Playlist');
       setPlaylistTracks([]);
     } catch(e) {
-      console.error('Failed to save playlist:', error);
+      console.error('Failed to save playlist:', e);
     } finally {
       setLoading(false);
     }
