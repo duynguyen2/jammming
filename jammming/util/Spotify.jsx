@@ -27,14 +27,14 @@ const Spotify = {
   async getAccessToken() {
     const now = Date.now();
 
-    if(accessToken && now < tokenExpiration) {
+    if(accessToken && now < tokenExpiration - 60000) {
       return accessToken;
     }
 
     const storedToken = localStorage.getItem('access_token');
-    const expiration = localStorage.getItem('token_expiration');
+    const expiration = Number(localStorage.getItem('token_expiration'));
 
-    if(storedToken && now < expiration) {
+    if(storedToken && expiration && now < expiration - 60000) {
       accessToken = storedToken;
       tokenExpiration = expiration;
       return accessToken;
@@ -46,6 +46,13 @@ const Spotify = {
     // If we have a code, exchange it for a token
     if (code) {
       const codeVerifier = localStorage.getItem('code_verifier');
+
+      if(!codeVerifier) {
+        console.error('Missing code_verifier - restarting auth');
+        localStorage.clear();
+        window.location.href='/';
+        return;
+      }
 
       const body = new URLSearchParams({
         client_id: clientId,
@@ -64,6 +71,12 @@ const Spotify = {
       });
 
       if(!response.ok) throw new Error('Token request failed!');
+      if(response.status === 401) {
+        console.warn('Token expired — clearing and reauthenticating');
+        localStorage.clear();
+        window.location.href = '/';
+        return;
+      }
 
       const data = await response.json();
       accessToken = data.access_token;
@@ -88,14 +101,21 @@ const Spotify = {
     console.log('CODE:', code);
     console.log('CODE VERIFIER:', codeVerifier);
 
+    const scopes = [
+      'playlist-modify-public',
+      'playlist-modify-private',
+      'user-read-email'
+    ];
+
     const authUrl =
       `https://accounts.spotify.com/authorize` +
       `?client_id=${clientId}` +
       `&response_type=code` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&scope=playlist-modify-public playlist-modify-private user-read-email` +
+      `&scope=${scopes.join(' ')}` +
       `&code_challenge_method=S256` +
-      `&code_challenge=${codeChallenge}`;
+      `&code_challenge=${codeChallenge}` +
+      `&show_dialog=true`;
 
     console.log('CODE:', code);
     console.log('CODE VERIFIER:', codeVerifier);
@@ -141,12 +161,14 @@ const Spotify = {
 
     try {
       const token = await this.getAccessToken();
+      console.log('TOKEN USED FOR SAVE:', token);
       const headers = { Authorization: `Bearer ${token}` };
 
       // Get user ID
       const userResponse = await fetch('https://api.spotify.com/v1/me', { headers });
       const userData = await userResponse.json();
       const userId = userData.id;
+
 
       // Create playlist
       const createResponse = await fetch(
@@ -160,7 +182,7 @@ const Spotify = {
           body: JSON.stringify({ 
             name,
             description: 'Created with Jammming',
-            public: true
+            public: false,
           })
         }
       );
@@ -173,23 +195,30 @@ const Spotify = {
 
       const playlistData = await createResponse.json();
       console.log('Created playlist ID:', playlistData.id);
+      console.log('USER ID:', userId);
+      console.log('PLAYLIST OWNER:', playlistData.owner?.id);
+
+      const query = trackUris.map(uri => `uri=${encodeURIComponent(uri)}`).join('&');
 
       // Add tracks
       const addResponse = await fetch(
-        `https://api.spotify.com/v1/playlists/${playlistData.id}/tracks`,
+        `https://api.spotify.com/v1/playlists/${playlistData.id}/tracks?${query}`,
         {
           method: 'POST',
           headers: {
             ...headers,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ uris: trackUris })
+          body: JSON.stringify({ uris: trackUris, position: 0 })
         }
       );
 
+      console.log('USER ID:', userId);
+      console.log('PLAYLIST OWNER:', playlistData.owner?.id);
+
       if(!addResponse.ok) {
         const err = await addResponse.json();
-        console.error('ADD TRACKS ERROR FULL:', err);
+        console.error('ADD TRACKS ERROR FULL:', JSON.stringify(err, null, 2));
         throw new Error(err.error?.message || 'Failed to add tracks');
       }
 
