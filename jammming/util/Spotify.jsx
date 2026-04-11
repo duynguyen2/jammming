@@ -27,14 +27,14 @@ const Spotify = {
   async getAccessToken() {
     const now = Date.now();
 
-    if(accessToken && now < tokenExpiration) {
+    if(accessToken && now < tokenExpiration - 60000) {
       return accessToken;
     }
 
     const storedToken = localStorage.getItem('access_token');
-    const expiration = localStorage.getItem('token_expiration');
+    const expiration = Number(localStorage.getItem('token_expiration'));
 
-    if(storedToken && now < expiration) {
+    if(storedToken && expiration && now < expiration - 60000) {
       accessToken = storedToken;
       tokenExpiration = expiration;
       return accessToken;
@@ -71,6 +71,12 @@ const Spotify = {
       });
 
       if(!response.ok) throw new Error('Token request failed!');
+      if(response.status === 401) {
+        console.warn('Token expired — clearing and reauthenticating');
+        localStorage.clear();
+        window.location.href = '/';
+        return;
+      }
 
       const data = await response.json();
       accessToken = data.access_token;
@@ -108,7 +114,8 @@ const Spotify = {
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&scope=${scopes.join(' ')}` +
       `&code_challenge_method=S256` +
-      `&code_challenge=${codeChallenge}`;
+      `&code_challenge=${codeChallenge}` +
+      `&show_dialog=true`;
 
     console.log('CODE:', code);
     console.log('CODE VERIFIER:', codeVerifier);
@@ -188,17 +195,21 @@ const Spotify = {
 
       const playlistData = await createResponse.json();
       console.log('Created playlist ID:', playlistData.id);
+      console.log('USER ID:', userId);
+      console.log('PLAYLIST OWNER:', playlistData.owner?.id);
+
+      const query = trackUris.map(uri => `uri=${encodeURIComponent(uri)}`).join('&');
 
       // Add tracks
       const addResponse = await fetch(
-        `https://api.spotify.com/v1/playlists/${playlistData.id}/tracks`,
+        `https://api.spotify.com/v1/playlists/${playlistData.id}/tracks?${query}`,
         {
           method: 'POST',
           headers: {
             ...headers,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ uris: trackUris })
+          body: JSON.stringify({ uris: trackUris, position: 0 })
         }
       );
 
